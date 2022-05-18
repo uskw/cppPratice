@@ -1,5 +1,8 @@
-#include "CustomString.h"
+#include <iostream>
 #include <vector>
+#include "CustomString.h"
+
+using namespace std;
 
 CustomString::CustomString() {
 	k_string = nullptr;
@@ -14,7 +17,21 @@ CustomString::CustomString(const char* str) {
 	else {
 		k_length = strlen(str);
 		k_string = new char[k_length + 1];
-		strcpy_s(k_string, k_length, str);
+		memset(k_string, 0, k_length + 1);
+		strcpy_s(k_string, k_length + 1, str);
+	}
+}
+
+CustomString::CustomString(const CustomString& str) {
+	if (str.k_string == nullptr) {
+		k_string = nullptr;
+		k_length = 0;
+	}
+	else {
+		k_length = str.k_length;
+		k_string = new char[k_length + 1];
+		memset(k_string, 0, k_length + 1);
+		strcpy_s(k_string, k_length + 1, str.k_string);
 	}
 }
 
@@ -25,9 +42,9 @@ CustomString::CustomString(const char* str, int start) {
 	}
 	else {
 		k_length = strlen(str) - start;
-		k_string = new char[k_length + 1];
-		const char* temp = &str[start];
-		strcpy_s(k_string, k_length, temp);
+		k_string = new char[k_length + 2];
+		memset(k_string, 0, k_length + 1);
+		strcpy_s(k_string, k_length + 1, str + start);
 	}
 }
 
@@ -46,9 +63,19 @@ CustomString& CustomString::operator=(const char* str) {
 		else {
 			k_length = strlen(str);
 			k_string = new char[k_length + 1];
-			strcpy_s(k_string, k_length, str);
+			memset(k_string, 0, k_length + 1);
+			strcpy_s(k_string, k_length + 1, str);
 		}
 	}
+	return *this;
+}
+
+CustomString& CustomString::operator=(const CustomString& str) {
+	delete[] k_string;
+	k_length = str.k_length;
+	k_string = new char[k_length + 1];
+	memset(k_string, 0, k_length + 1);
+	memcpy(k_string, str.k_string, k_length);
 	return *this;
 }
 
@@ -75,25 +102,23 @@ CustomString CustomString::sub(int begin, int end) {
 		return nullptr;
 	}
 	else {
-		CustomString str;
-		for (int i = 0; i < k_length; i++) {
-			if (i >= begin) {
-				str.k_string[i] = k_string[i];
-			}
-			if (i > end) {
-				return str;
-			}
-		}
+		char* string = new char[end - begin + 2];
+		memset(string, 0, (end - begin + 2) * sizeof(char));
+		int len = end - begin + 1;
+		memcpy(string, k_string + begin, len * sizeof(char));
+		auto result = CustomString(string);
+		delete[] string;
+		return result;
 	}
 }
 
 void CustomString::append(const char* str) {
-	char* string = new char[k_length + 1];
-	strcpy_s(string, k_length, k_string);
-	strcat_s(string, k_length + 1, str);
+	char* string = new char[k_length + strlen(str) + 1];
+	strcpy_s(string, k_length + 1, k_string);
+	strcat_s(string, k_length + strlen(str) + 1, str);
 	k_length += strlen(str);
 	delete[] k_string;
-	strcpy_s(k_string, k_length, string);
+	k_string = string;
 }
 
 int CustomString::find(const char* str) {
@@ -119,22 +144,26 @@ int CustomString::find(const char* str) {
 	return -1;
 }
 
-CustomString* CustomString::split(const char* str) {
-	if (str == nullptr) {
-		return nullptr;
-	}
+vector<CustomString> CustomString::split(const char* str) {
+	vector<CustomString> result;
 	CustomString string = CustomString(k_string);
 	bool flag = false;
 	int index = 0;
-	CustomString* result = new CustomString();
-	while (int num = string.find(str) != -1) {
-		result[index++].sub(0, num);
-		CustomString string = CustomString(k_string, index);
+	while (true) {
+		int num = string.find(str);
+		if (num == -1)
+		{
+			result.push_back(string);
+			break;
+		}
+		auto temp = string.sub(0, num);
+		result.push_back(temp);
+		index++;
+		string = CustomString(k_string, num + 1);
 	}
-	if (!flag) {
-		return nullptr;
-	}
-	else {
-		return result;
-	}
+	return result;
+}
+
+void CustomString::print() {
+	cout << k_string << endl;
 }

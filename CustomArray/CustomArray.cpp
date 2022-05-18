@@ -18,10 +18,12 @@ void CustomArray::reserve(int len) {
 		return;
 	}
 	int* arr = new int[len];
-	k_length = len;
-	k_dataSize = 0;
+	memset(arr, 0, len * sizeof(int));
+	memcpy(arr, k_array, k_length);
+	delete[] k_array;
 	k_array = arr;
-	delete[] arr;
+	k_length = len;
+	arr = nullptr;
 }
 
 void CustomArray::push(int value) {
@@ -56,12 +58,21 @@ void CustomArray::clear() {
 }
 
 int CustomArray::findIndex(int index) {
+	if (k_dataSize == 0) {
+		return -1;
+	}
 	return k_array[index];
 }
 
 void CustomArray::autoSize() {
 	if (k_dataSize == k_length) {
 		k_length *= 2;
+		int* arr = new int[k_length];
+		memset(arr, 0, k_length * sizeof(int));
+		memcpy(arr, k_array, k_length);
+		delete[] k_array;
+		k_array = arr;
+		arr = nullptr;
 	}
 }
 
